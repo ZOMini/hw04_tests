@@ -1,7 +1,6 @@
 # posts/tests/test_urls.py
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
-
 from posts.models import Group, Post
 
 User = get_user_model()
@@ -82,10 +81,3 @@ class AllURLTests(TestCase):
                 self.assertTemplateUsed(response, template)
         response = self.authorized_client_author.get('/create/')
         self.assertTemplateUsed(response, 'posts/create_post.html')
-
-    # def test_url_quest_response_redirect(self):
-    #     """Страница / доступна любому пользователю."""
-    #     response = self.guest_client.get('/task/', follow=True)
-    #     self.assertRedirects(
-    #         response, '/admin/login/?next=/task/'
-    #     )

@@ -26,6 +26,7 @@ class MyFormTests(TestCase):
         self.authorized_client.force_login(self.user_a)
 
     def test_form_create(self):
+        """Test create form"""
         posts_count = Post.objects.count()
         form_data = {'text': 'Тестовый текст2'}
         response = self.authorized_client.post(
@@ -57,20 +58,24 @@ class MyFormTests(TestCase):
         self.assertTrue(Post.objects.filter(text='текст4').exists())
         self.assertEqual(response.status_code, 200)
 
+    # Не могу понять почему не создается user через форму,
+    # при этом не выдает ошибок.
+    # Вручную на странице - все ок.
+
     # def test_form_signup(self):
-        # """Тест signup"""
-        # form_data = {'first_name': 'w23w',
-        #              'last_name': 'weetyt3',
-        #              'username': 'u2u34',
-        #              'email': 'q32423@q5.ru',
-        #              'password': 'asqw1m2439A',
-        #              'password2': 'asqw1m2439A'}
-        # self.q_client.post(reverse('users:signup'), data=form_data,
-        #                    follow=True)
+    #     """Тест signup form"""
+    #     form_data = {'first_name': 'w23w',
+    #                  'last_name': 'weetyt3',
+    #                  'username': 'u2u34',
+    #                  'email': 'q32423@q5.ru',
+    #                  'password': 'asqw1m2439A',
+    #                  'password2': 'asqw1m2439A'}
+    #     self.q_client.post(reverse('users:signup'), data=form_data,
+    #                        follow=True)
+    #     self.assertTrue(User.objects.filter(username='u2u34').exists())
+
         # u_count = User.objects.count()
         # print(f'количество {u_count}')
-        # self.assertTrue(User.objects.filter(username='u2u34').exists())
-        # u_2 = User.objects.get(username='u2u34')
-        # self.assertRedirects(response, reverse('posts:index'))
-        # self.assertEqual(form_data['username'],
+        # # self.assertRedirects(response, reverse('posts:index'))
+        # # self.assertEqual(form_data['username'],
         #                  u_2.username)
