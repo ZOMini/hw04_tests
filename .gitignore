@@ -1,3 +1,11 @@
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover 
+static/
+posts/static/
+.vscode
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

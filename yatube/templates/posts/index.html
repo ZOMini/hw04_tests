@@ -1,0 +1,27 @@
+<!-- templates/posts/index.html -->
+{% extends 'base.html' %}
+{% block content %}
+  <p> Последние обновления на сайте: </p>
+  {% for post in page_obj %}
+  <ul>
+    <li>
+      Автор: {{ post.author.get_full_name }}
+    </li>
+    <li>
+      Дата публикации: {{ post.pub_date|date:"d E Y" }}
+    </li>
+  </ul>
+  <p>{{ post.text|linebreaksbr }}</p>    
+  {% if post.group is not None %}
+    <a href="{% url 'posts:group_list' post.group.slug %}">
+    все записи группы {{post.group}}</a>
+  {% elif post.group == None %}
+    <p> Этот пост не входит в группу </p>
+  {% endif %}
+  {% if not forloop.last %}<hr>{% endif %}
+{% endfor %}
+{% include 'posts/includes/paginator.html' %}
+{% endblock %}
+{% block title %}
+  <title>{{ text }}</title>
+{% endblock %}
