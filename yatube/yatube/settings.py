@@ -122,6 +122,19 @@ STATIC_URL = '/static/'
 
 YATUBE_CONST = {'empty': '-пусто-', 'count_pag': 10}
 
+HTML_S = {
+    'h_index': 'posts/index.html',
+    'h_group': 'posts/group_list.html',
+    'h_profile': 'posts/profile.html',
+    'h_post': 'posts/post_detail.html',
+    'h_edit_create': 'posts/create_post.html',
+    'h_signup': 'users/signup.html',
+    'h_login': 'users/login.html',
+    'h_author': 'about/author.html',
+    'h_tech': 'about/tech.html',
+
+}
+
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
@@ -136,4 +149,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
-SHELL_PLUS = "ipython"
+SHELL_PLUS = 'ipython'
+# Сорь, каждую HW новый клон, забываю инсталить их, даже создал
+# файлик с нужными инсталами, но забыл:).

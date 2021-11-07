@@ -1,10 +1,8 @@
+from core.time_func import timeit
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-
-from core.time_func import timeit
-
-from yatube.settings import YATUBE_CONST
+from yatube.settings import HTML_S, YATUBE_CONST
 
 from .forms import PostForm
 from .models import Group, Post, User
@@ -12,7 +10,7 @@ from .models import Group, Post, User
 
 @timeit
 def index(request):
-    template = 'posts/index.html'
+    template = HTML_S['h_index']
     text = 'Это главная страница проекта Yatube'
     posts = Post.objects.select_related('group', 'author').all()
     paginator = Paginator(posts, YATUBE_CONST['count_pag'])
@@ -28,7 +26,7 @@ def index(request):
 
 @timeit
 def group_posts(request, slug):
-    template = 'posts/group_list.html'
+    template = HTML_S['h_group']
     text = 'Здесь будет информация о группах проекта Yatube'
     group = Group.objects.get(slug=slug)
     posts = group.group_posts.all().select_related('author')
@@ -46,7 +44,7 @@ def group_posts(request, slug):
 
 @timeit
 def profile(request, username):
-    template = 'posts/profile.html'
+    template = HTML_S['h_profile']
     author = User.objects.get(username=username)
     posts = author.posts.all().select_related('group', 'author')
     paginator = Paginator(posts, YATUBE_CONST['count_pag'])
@@ -63,7 +61,7 @@ def profile(request, username):
 
 @timeit
 def post_detail(request, post_id):
-    template = 'posts/post_detail.html'
+    template = HTML_S['h_post']
     post = Post.objects.select_related('group', 'author').get(id=post_id)
     username = post.author.username
     author = get_object_or_404(User, username=username)
@@ -78,7 +76,7 @@ def post_detail(request, post_id):
 @timeit
 @login_required
 def post_create(request):
-    template = 'posts/create_post.html'
+    template = HTML_S['h_edit_create']
     form = PostForm(request.POST)
     if form.is_valid():
         post = form.save(commit=False)
@@ -91,7 +89,7 @@ def post_create(request):
 @timeit
 @login_required
 def post_edit(request, post_id):
-    template = 'posts/create_post.html'
+    template = HTML_S['h_edit_create']
     is_edit = True
     post = get_object_or_404(Post, id=post_id)
     form = PostForm(request.POST or None, instance=post)

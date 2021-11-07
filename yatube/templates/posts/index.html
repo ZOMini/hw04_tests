@@ -1,5 +1,6 @@
 <!-- templates/posts/index.html -->
 {% extends 'base.html' %}
+{% block title %}Основная страница{% endblock %}
 {% block content %}
   <p> Последние обновления на сайте: </p>
   {% for post in page_obj %}
@@ -21,7 +22,4 @@
   {% if not forloop.last %}<hr>{% endif %}
 {% endfor %}
 {% include 'posts/includes/paginator.html' %}
-{% endblock %}
-{% block title %}
-  <title>{{ text }}</title>
 {% endblock %}

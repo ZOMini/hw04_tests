@@ -1,81 +1,89 @@
-from django.contrib.auth import get_user_model
+from http import HTTPStatus
+
 from django.test import Client, TestCase
 from django.urls import reverse
+from posts.models import Group, Post, User
 
-from ..models import Group, Post
+# Чето переборщил с констами похоже, особенно во въюхах:).
 
-User = get_user_model()
+SLUG_1 = 'test-slug'
+USER = 'user_a'
+AUTHOR = 'author_p'
+TEXT = 'text'
+TEXT4 = 'text4'
+TITLE = 'Тестовая группа'
+DESCRIPTION = 'Тестовое описание'
+TEXT1 = 'Тестовый текст'
+
+INDEX_NAME = 'posts:index'
+PROFILE_NAME = 'posts:profile'
+POST_DETAIL_NAME = 'posts:post_detail'
+POST_EDIT_NAME = 'posts:post_edit'
+CREATE_NAME = 'posts:post_create'
+SIGNUP_NAME = 'users:signup'
+
+FORM_DATA_1 = {'text': 'Тестовый текст2'}
+FORM_DATA_2 = {'text': TEXT4}
+FORM_DATA_3 = {'username': AUTHOR,
+               'password1': 'asqw1m2439A',
+               'password2': 'asqw1m2439A'}
+
+PROFILE_USER = reverse(PROFILE_NAME, kwargs={'username': USER})
 
 
 class MyFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user_a = User.objects.create_user(username='user_a')
+        cls.user_a = User.objects.create_user(username=USER)
         cls.group = Group.objects.create(
-            slug='test-slug',
-            title='Тестовая группа',
-            description='Тестовое описание',)
+            slug=SLUG_1,
+            title=TITLE,
+            description=DESCRIPTION,)
         cls.post = Post.objects.create(author=cls.user_a,
-                                       text='Тестовый текст',
+                                       text=TEXT1,
                                        group=cls.group)
 
     def setUp(self):
         self.q_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user_a)
+        self.POST_DETAIL = reverse(
+            POST_DETAIL_NAME, kwargs={'post_id': self.post.id})
+        self.POST_EDIT = reverse(
+            POST_EDIT_NAME, kwargs={'post_id': self.post.id})
 
     def test_form_create(self):
-        """Test create form"""
+        """Test create form."""
         posts_count = Post.objects.count()
-        form_data = {'text': 'Тестовый текст2'}
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
+            reverse(CREATE_NAME),
+            data=FORM_DATA_1,
             follow=True
         )
-        self.assertRedirects(response, reverse('posts:profile',
-                                               kwargs={'username': 'user_a'}))
+        self.assertRedirects(response, PROFILE_USER)
         self.assertEqual(posts_count + 1, Post.objects.count())
-        self.assertTrue(Post.objects.filter(text='Тестовый текст2').exists())
-        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Post.objects.filter(text=FORM_DATA_1[TEXT]).exists())
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_form_edit_post(self):
-        """Test edit post"""
+        """Test edit post."""
         posts_count = Post.objects.count()
-        form_data = {'text': 'текст4'}
         response = self.authorized_client.post(
-            reverse('posts:post_edit',
-                    kwargs={'post_id': f'{self.post.id}'}),
-            data=form_data,
+            self.POST_EDIT,
+            data=FORM_DATA_2,
             follow=True
         )
-        self.assertRedirects(response,
-                             reverse('posts:post_detail',
-                                     kwargs={'post_id':
-                                             self.post.id}))
+        self.assertRedirects(response, self.POST_DETAIL)
         self.assertEqual(posts_count, Post.objects.count())
-        self.assertTrue(Post.objects.filter(text='текст4').exists())
-        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Post.objects.filter(text=TEXT4).exists())
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    # Не могу понять почему не создается user через форму,
-    # при этом не выдает ошибок.
-    # Вручную на странице - все ок.
-
-    # def test_form_signup(self):
-    #     """Тест signup form"""
-    #     form_data = {'first_name': 'w23w',
-    #                  'last_name': 'weetyt3',
-    #                  'username': 'u2u34',
-    #                  'email': 'q32423@q5.ru',
-    #                  'password': 'asqw1m2439A',
-    #                  'password2': 'asqw1m2439A'}
-    #     self.q_client.post(reverse('users:signup'), data=form_data,
-    #                        follow=True)
-    #     self.assertTrue(User.objects.filter(username='u2u34').exists())
-
-        # u_count = User.objects.count()
-        # print(f'количество {u_count}')
-        # # self.assertRedirects(response, reverse('posts:index'))
-        # # self.assertEqual(form_data['username'],
-        #                  u_2.username)
+    # Разобрался, отбой.
+    def test_form_signup(self):
+        """Тест signup form."""
+        response = self.q_client.post(reverse(SIGNUP_NAME),
+                                      data=FORM_DATA_3,
+                                      follow=True)
+        self.assertRedirects(response, reverse(INDEX_NAME))
+        self.assertTrue(User.objects.filter(username=AUTHOR).exists())
