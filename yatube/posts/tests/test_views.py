@@ -239,11 +239,11 @@ class AllViewsTests(TestCase):
     def test_index_cache(self):
         """Тест index кэш."""
         Post.objects.all().delete()
-        self.a_c_author.post('/new/', {'text': 'Тестовый пост1!'}, follow=True)
+        self.a_c_author.post(INDEX, {'text': 'Тестовый пост1!'}, follow=True)
         response = self.a_c_author.get(INDEX)
         content = response.content
         Post.objects.all().delete()
-        # time.sleep(21) # Проверяем ломается ли тест.
+        # time.sleep(21)  # Проверяем ломается ли тест.
         response = self.a_c_author.get(INDEX)
         self.assertEqual(content, response.content)
         cache.clear()
