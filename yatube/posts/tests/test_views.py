@@ -1,9 +1,14 @@
+import shutil
+import tempfile
 import time
 
 from django import forms
+from django.conf import settings
+from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Group, Post, User
+from posts.models import Comment, Follow, Group, Post, User
 from yatube.settings import HTML_S, YATUBE_CONST
 
 PAGE = YATUBE_CONST['count_pag']
@@ -46,7 +51,22 @@ TEMP_PAGE_NAMES = {
 FORM_FIELDS = {
     'text': forms.fields.CharField,
     'group': forms.models.ModelChoiceField,
+    'image': forms.fields.ImageField,
 }
+SMALL_GIF = (
+    b'\x47\x49\x46\x38\x39\x61\x02\x00'
+    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+    b'\x0A\x00\x3B'
+)
+UPLOADED_GIF = SimpleUploadedFile(
+    name='small.gif',
+    content=SMALL_GIF,
+    content_type='image/gif'
+)
+settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
 class AllViewsTests(TestCase):
@@ -62,16 +82,20 @@ class AllViewsTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.author_p,
             text=TEXT1,
-            group=cls.group,)
+            group=cls.group,
+            image=UPLOADED_GIF)
         time.sleep(0.01)  # Иначе сортирует не верно.
         Post.objects.create(author=cls.author_p,
                             text='text_2',
+                            image=UPLOADED_GIF
                             )
         for i in range(13):
             time.sleep(0.01)  # Без этого тесты ломаются.
             Post.objects.create(author=cls.user_a,
                                 text=f'text{i}',
-                                group=cls.group)
+                                group=cls.group,
+                                image=UPLOADED_GIF
+                                )
         # Если сделать через bulk_create, как ниже, или убрать sleep, как выше,
         # то посты создаются в случайном порядке, видимо pub_date
         # (= случайные ID) одинаковый, ну соответственно все тесты ниже
@@ -84,6 +108,7 @@ class AllViewsTests(TestCase):
         # Post.objects.bulk_create(posts, 13)
 
     def setUp(self):
+        self.guest_client = Client()
         self.a_c_author = Client()
         self.a_c_author.force_login(self.author_p)
 
@@ -94,7 +119,6 @@ class AllViewsTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     # Проверяем пэджинатор.
-
     def test_index_first_page(self):
         # индекс 1-я стр, 10
         response = self.a_c_author.get(INDEX)
@@ -131,6 +155,7 @@ class AllViewsTests(TestCase):
         obj = response.context['page_obj'][1]
         self.assertEqual(obj.author, self.user_a)
         self.assertEqual(obj.text, 'text11')
+        self.assertTrue(obj.image)
 
     def test_post_create_page(self):
         response = self.a_c_author.get(CREATE)
@@ -146,6 +171,20 @@ class AllViewsTests(TestCase):
                          self.author_p)
         self.assertEqual(response.context.get('post').group,
                          self.group)
+        self.assertTrue(response.context.get('post').image)
+
+    def test_post_detail_comment(self):
+        """Авторизованный пользователь может писать комментарии"""
+        comments_count = Comment.objects.count()
+        new_comment = (Comment.objects.create(
+            post=self.post,
+            author=self.user_a, text='коммент 1')).text
+        resp = self.a_c_author.get(POST_DETAIL)
+        comment_2 = resp.context['comments'][0].text
+        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        # Коммент добавился.
+        self.assertEqual(comment_2, new_comment)
+        # Коммент совпадает.
 
     def test_group_posts_pages(self):
         response = self.a_c_author.get(GROUP_1)
@@ -153,6 +192,7 @@ class AllViewsTests(TestCase):
         self.assertEqual(obj.text, 'text12')
         self.assertEqual(obj.author, self.user_a)
         self.assertEqual(obj.group, self.group)
+        self.assertTrue(obj.image)
 
     def test_profile_pages(self):
         response = self.a_c_author.get(PROFILE_AUTHOR)
@@ -160,6 +200,7 @@ class AllViewsTests(TestCase):
         obj = response.context['page_obj'][0]
         self.assertEqual(obj.text, 'text_2')
         self.assertEqual(obj.author, user)
+        self.assertTrue(obj.image)
 
     # Проверяем последний созданный пост с группой.
 
@@ -194,3 +235,54 @@ class AllViewsTests(TestCase):
         self.assertEqual(response.context['page_obj'][0].id, 15)
         """ Так-как 15-й пост остался 1-м в группе "1", значит 16-й пост,
          из группы "2", не отображается в "1"-й группе - Ок."""
+
+    def test_index_cache(self):
+        """Тест index кэш."""
+        Post.objects.all().delete()
+        self.a_c_author.post('/new/', {'text': 'Тестовый пост1!'}, follow=True)
+        response = self.a_c_author.get(INDEX)
+        content = response.content
+        Post.objects.all().delete()
+        # time.sleep(21) # Проверяем ломается ли тест.
+        response = self.a_c_author.get(INDEX)
+        self.assertEqual(content, response.content)
+        cache.clear()
+        response = self.a_c_author.get(INDEX)
+        self.assertNotEqual(content, response.content)
+
+    def test_user_unsub_and_sub(self):
+        user2 = User.objects.create_user(username='User2')
+        Follow.objects.create(user=self.author_p, author=user2)
+        followers_count = Follow.objects.filter(
+            user=self.author_p, author=user2).count()
+        self.assertEqual(followers_count, 1)
+        self.guest_client.get(reverse(
+            PROFILE_NAME, kwargs={'username': user2}))
+        followers_count = Follow.objects.filter(
+            user=self.user_a, author=user2).count()
+        self.assertEqual(followers_count, 0)
+
+    def test_follow_post_exists_in_follow_index(self):
+        user2 = User.objects.create_user(username='User2')
+        post = Post.objects.create(text='Проверка подписки', author=user2)
+        Follow.objects.create(user=self.author_p, author=user2)
+        response = self.a_c_author.get(reverse(
+            'posts:follow_index'))
+        post_text1 = response.context['page_obj'][0].text
+        self.assertEqual(post.text, post_text1)
+
+    def test_unfollow_post_does_not_exists_in_follow_index(self):
+        user2 = User.objects.create_user(username='User2')
+        post = Post.objects.create(text='Проверка подписки', author=user2)
+        test_client = Client()
+        test_client.force_login(user2)
+        Follow.objects.create(user=user2, author=self.author_p)
+        response = test_client.get(reverse(
+            'posts:follow_index'))
+        post_text1 = response.context['page_obj'][0].text
+        self.assertNotEqual(post.text, post_text1)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()

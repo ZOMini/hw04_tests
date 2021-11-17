@@ -17,7 +17,6 @@ TEXT1 = 'Тестовый текст'
 URL_INDEX = '/'
 URL_GROUP = f'/group/{SLUG_1}/'
 URL_PROFILE = f'/profile/{USER}/'
-URL_NOEXIT = '/noexisting_page/'
 URL_POST = f'/posts/{POST_NUM}/'
 URL_CREATE = '/create/'
 URL_EDIT = f'/posts/{POST_NUM}/edit/'
@@ -28,7 +27,6 @@ FOR_GUEST_TEST = {
     URL_INDEX: HTTPStatus.OK,
     URL_GROUP: HTTPStatus.OK,
     URL_PROFILE: HTTPStatus.OK,
-    URL_NOEXIT: HTTPStatus.NOT_FOUND,
     URL_POST: HTTPStatus.OK,
     URL_CREATE: HTTPStatus.FOUND,
     URL_EDIT: HTTPStatus.FOUND,

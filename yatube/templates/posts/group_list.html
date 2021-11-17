@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
+{% load thumbnail %}
 {% block title %} Страница группы {{ page_obj.0.group.title }}{% endblock %}
 {% block header %} {{ page_obj.0.group.title }} {% endblock %}
 {% block content %}
@@ -9,20 +10,7 @@
   {{page_obj.0.group.description|linebreaksbr }}
   </p>
   {% for post in page_obj %}
-  <ul>
-    <li>
-      Автор: {{ post.author.get_full_name }} 
-      <a href="{% url 'posts:profile' post.author.username %}">
-      все посты пользователя</a> 
-    </li>
-    <li>
-      Дата публикации: {{ post.pub_date|date:"d E Y" }}  {{n}}
-    </li>
-  </ul>
-  <p>{{ post.text|linebreaksbr }}</p>
-  <a href="{% url 'posts:post_detail' post.id %}">подробная информация</a><br>
-  <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
-  {{ post.group.title }}
+    {% include 'posts/includes/post_list.html' %}
   {% if not forloop.last %}<hr>{% endif %}
 {% endfor %}
 {% include 'posts/includes/paginator.html' %}

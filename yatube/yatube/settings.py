@@ -12,10 +12,12 @@ SECRET_KEY = 'ib-4976o0%_&doar(7ry^(l727ftjcq4gb)rkow-y7_!a2^o_h'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -31,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'django_extensions',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -118,6 +121,10 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 STATIC_URL = '/static/'
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'
+
 # My constants (на будущее сделал словарь)
 
 YATUBE_CONST = {'empty': '-пусто-', 'count_pag': 10}
@@ -150,5 +157,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 SHELL_PLUS = 'ipython'
-# Сорь, каждую HW новый клон, забываю инсталить их, даже создал
-# файлик с нужными инсталами, но забыл:).
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}

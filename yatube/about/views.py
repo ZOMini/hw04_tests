@@ -1,9 +1,10 @@
 from django.views.generic.base import TemplateView
+from yatube.settings import HTML_S
 
 
 class AboutAuthorView(TemplateView):
-    template_name = 'about/author.html'
+    template_name = HTML_S['h_author']
 
 
 class AboutTechView (TemplateView):
-    template_name = 'about/tech.html'
+    template_name = HTML_S['h_tech']

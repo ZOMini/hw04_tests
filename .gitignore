@@ -4,12 +4,14 @@ htmlcov/
 coverage.xml
 *.cover 
 static/
+media/
 posts/static/
 .vscode
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+.github/
 
 # C extensions
 *.so
