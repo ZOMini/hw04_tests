@@ -22,7 +22,7 @@
 
 Клонируем репозиторий
 
-<code>git clone https://github.com/iliazaraysky/hw04_tests.git</code>
+<code>git clone https://github.com/ZOMini/hw04_tests</code>
 
 Переходим в папку с проектом
 
