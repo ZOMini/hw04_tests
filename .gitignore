@@ -2,9 +2,7 @@ htmlcov/
 .coverage
 .coverage.*
 coverage.xml
-*.cover 
-static/
-media/
+*.cover
 posts/static/
 .vscode
 # Byte-compiled / optimized / DLL files
